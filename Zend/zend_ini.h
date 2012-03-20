@@ -63,17 +63,17 @@
 struct _zend_ini_entry {
 	int module_number;
 	int modifiable;
-	char *name;
+	const char *name;
 	uint name_length;
 	ZEND_INI_MH((*on_modify));
 	void *mh_arg1;
 	void *mh_arg2;
 	void *mh_arg3;
 
-	char *value;
+	const char *value;
 	uint value_length;
 
-	char *orig_value;
+	const char *orig_value;
 	uint orig_value_length;
 	int orig_modifiable;
 	int modified;
