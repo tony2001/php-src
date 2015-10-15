@@ -288,12 +288,12 @@ php_stream * php_stream_url_wrap_php(php_stream_wrapper *wrapper, const char *pa
 		} else {
 			fd = dup(STDERR_FILENO);
 		}
-	} else if (!strncasecmp(path, "fd/", 3) || !strncasecmp(path, "fdraw/", 6)) {
+	} else if (!strncasecmp(path, "fd/", 3)) {
 		const char *start;
 		char       *end;
 		zend_long  fildes_ori;
 		int		   dtablesize;
-		int	       is_raw = !strncasecmp(path, "fdraw/", 6);
+		int	       is_raw;
 
 		if (strcmp(sapi_module.name, "cli")) {
 			if (options & REPORT_ERRORS) {
@@ -309,16 +309,11 @@ php_stream * php_stream_url_wrap_php(php_stream_wrapper *wrapper, const char *pa
 			return NULL;
 		}
 
-		if (is_raw) {
-			start = &path[6];
-		} else {
-			start = &path[3];
-		}
-
+		start = &path[3];
 		fildes_ori = ZEND_STRTOL(start, &end, 10);
-		if (end == start || *end != '\0') {
+		if (end == start || *end != '\0' && !(is_raw = !strncasecmp(end, "/raw", 4))) {
 			php_stream_wrapper_log_error(wrapper, options,
-				"php://fd%s/ stream must be specified in the form php://fd/<orig fd>", is_raw ? "raw" : "");
+				"php://fd/ stream must be specified in the form php://fd/<orig fd>");
 			return NULL;
 		}
 
@@ -342,7 +337,7 @@ php_stream * php_stream_url_wrap_php(php_stream_wrapper *wrapper, const char *pa
 #elif HAVE_FCNTL_H
 			if (fcntl(fd, F_GETFD) == -1) {
 #else
-#warning "No API to check file descriptor for this operating system, php://fdraw/ will not work"
+#warning "No API to check file descriptor for this operating system, php://fd/<fd>/raw probably will not work"
 			if (0) {
 #endif
 				php_stream_wrapper_log_error(wrapper, options TSRMLS_CC, "File descriptor %ld invalid: "
